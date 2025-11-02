@@ -28,7 +28,6 @@ export default function AddSaleModal({ onClose }) {
       new Map(data.map((item) => [item.name, item])).values()
     )
     setItems(uniqueItems)
-    console.log(uniqueItems)
   } catch (err) {
     console.error("Error fetching items:", err)
   }
