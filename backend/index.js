@@ -24,10 +24,17 @@ const prisma = new PrismaClient();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173","http://localhost:5174","https://system-blond.vercel.app/login","https://system-blond.vercel.app"], // your frontend URL
-    credentials: true,               // allow cookies if needed
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://system-blond.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 )
+
 
 // Middleware// Middleware
 app.use(express.json({ limit: "50mb" }));
