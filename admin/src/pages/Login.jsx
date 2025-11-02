@@ -1,8 +1,7 @@
-"use client"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import api from "../utils/api"
+import { Eye, EyeOff } from "lucide-react"
 import "../styles/Login.css"
 
 export default function Login({ setIsAuthenticated, setUser }) {
@@ -49,16 +48,21 @@ export default function Login({ setIsAuthenticated, setUser }) {
 
           <div className="form-group">
             <label>Password</label>
-            <div className="password-field">
+            <div className="password-field-wrapper">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <button type="button" className="toggle-password" onClick={() => setShowPassword((s) => !s)}>
-                {showPassword ? "Hide" : "Show"}
-              </button>
+              <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
             </div>
           </div>
 
