@@ -41,8 +41,6 @@ model Worker {
   workerExpenses WorkerExpense[]
 }
 
-
-
 model Attendance {
   id        String    @id @default(cuid())
   workerId  String

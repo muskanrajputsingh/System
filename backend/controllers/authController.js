@@ -53,7 +53,7 @@ export const login = async (req, res) => {
     // Convert to lowercase for consistent lookup
     name = name.trim().toLowerCase()
 
-    const user = await prisma.user.findUnique({ where: { name } })
+    const user = await prisma.user.findFirst({ where: { name } })
     if (!user) return res.status(401).json({ error: "Invalid name" })
 
     const isMatch = await bcrypt.compare(password, user.password)
