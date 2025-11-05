@@ -28,10 +28,10 @@ model Worker {
   id          String       @id @default(cuid())
   userId      String
   name        String        @unique  
-  phone       String
-  position    String
-  salary      Float
-  joinDate    DateTime
+  phone       String?
+  position    String?
+  salary      Float?
+  joinDate    DateTime?
   isActive    Boolean       @default(true)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

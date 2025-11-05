@@ -176,6 +176,7 @@ export default function Workers() {
               <option value="shop1">Shop 1</option>
               <option value="shop2">Shop 2</option>
               <option value="shop3">Shop 3</option>
+               <option value="shop4">Shop 4</option>
             </select>
           </div>
           {!editingId && (
@@ -185,7 +186,7 @@ export default function Workers() {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Default: worker123"
+                placeholder="Default:12345"
               />
             </div>
           )}

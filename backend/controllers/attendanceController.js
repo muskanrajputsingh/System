@@ -53,7 +53,7 @@ export const getAttendance = async (req, res) => {
 export const addAttendance = async (req, res) => {
   try {
     const userId = req.userId
-    const { workerId, date, status, checkIn, checkOut, notes } = req.body
+    const { workerId, date, status, checkIn, checkOut} = req.body
 
     if (!workerId || !date || !status) {
       return res.status(400).json({ error: "workerId, date, and status are required" })
@@ -115,7 +115,6 @@ export const addAttendance = async (req, res) => {
         status,
         checkIn: checkInTime,
         checkOut: checkOutTime,
-        notes: notes || null,
       },
     })
 

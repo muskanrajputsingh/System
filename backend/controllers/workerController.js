@@ -128,7 +128,7 @@ export const addWorker = async (req, res) => {
     let workerUser = await prisma.user.findUnique({ where: { name: lowerCaseName } })
 
     if (!workerUser) {
-      const hashedPassword = await bcrypt.hash(password || "worker123", 10)
+      const hashedPassword = await bcrypt.hash(password || "12345", 10)
       workerUser = await prisma.user.create({
         data: {
           name: lowerCaseName,

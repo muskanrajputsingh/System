@@ -16,7 +16,6 @@ export default function Attendance() {
     status: "present",
     checkIn: "",
     checkOut: "",
-    notes: "",
   })
 
   useEffect(() => {
@@ -74,7 +73,6 @@ export default function Attendance() {
         status: "present",
         checkIn: "",
         checkOut: "",
-        notes: "",
       })
     } catch (error) {
       console.error("Error adding attendance:", error)
@@ -195,10 +193,6 @@ export default function Attendance() {
               value={formData.checkOut}
               onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
             />
-          </div>
-          <div className="form-group">
-            <label>Notes</label>
-            <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
           </div>
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Adding..." : "Add Attendance"}
