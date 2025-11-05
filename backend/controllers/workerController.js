@@ -150,7 +150,7 @@ export const addWorker = async (req, res) => {
         name: lowerCaseName,
         phone,
         position,
-        salary: Number.parseFloat(salary),
+        salary: salary ? Number.parseFloat(salary) : 0,
         joinDate: joinDate ? new Date(joinDate) : new Date(),
       },
       include: {
