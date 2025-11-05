@@ -26,6 +26,7 @@
 .dashboard-header p {
   color: #666;
   font-size: 14px;
+  text-transform: capitalize;
 }
 
 .dashboard-tabs {

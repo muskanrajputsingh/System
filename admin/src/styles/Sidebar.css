@@ -76,12 +76,14 @@
 .user-info p {
   font-weight: 600;
   margin: 0 0 5px 0;
+  text-transform: capitalize;
 }
 
 .user-info small {
   display: block;
   opacity: 0.8;
   font-size: 12px;
+  text-transform: capitalize;
 }
 
 .btn-logout {
