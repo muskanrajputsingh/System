@@ -1,96 +1,6 @@
 import { prisma } from "../index.js"
 import ExcelJS from "exceljs"
 
-// export const getProfitLossSummary = async (req, res) => {
-//   try {
-//     const userId = req.userId
-//     const { startDate, endDate } = req.query
-
-//     const user = await prisma.user.findUnique({ where: { id: userId } })
-//     if (user.role !== "admin") {
-//       return res.status(403).json({ error: "Unauthorized" })
-//     }
-
-//     const start = new Date(startDate)
-//     const end = new Date(endDate)
-//     end.setHours(23, 59, 59, 999)
-
-//     const [sales, purchases, expenses, saleBorrows, purchaseBorrows, funds] = await Promise.all([
-//       prisma.sale.findMany({
-//         where: { saleDate: { gte: start, lte: end } },
-//         include: { item: true, user: true },
-//       }),
-//       prisma.purchase.findMany({
-//         where: { purchaseDate: { gte: start, lte: end } },
-//         include: { item: true, user: true },
-//       }),
-//       prisma.expense.findMany({
-//         where: { date: { gte: start, lte: end } },
-//       }),
-//       prisma.sale.findMany({
-//         where: {
-//           saleDate: { gte: start, lte: end },
-//           paymentType: "borrow",
-//         },
-//       }),
-//       prisma.purchase.findMany({
-//         where: {
-//           purchaseDate: { gte: start, lte: end },
-//           paymentType: "borrow",
-//         },
-//       }),
-//       // ✅ Fetch Worker Fund Transactions (owner giving money)
-//       prisma.workerFund.findMany({
-//         where: { createdAt: { gte: start, lte: end } },
-//         include: { owner: true },
-//         orderBy: { createdAt: "desc" },
-//       }),
-//     ])
-
-//     // Totals
-//     const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0)
-//     const totalPurchases = purchases.reduce((sum, p) => sum + p.totalAmount, 0)
-//     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0)
-//     const grossProfit = totalSales - totalPurchases
-//     const netProfit = grossProfit - totalExpenses
-
-//     const borrowSalesTotal = saleBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0)
-//     const borrowPurchasesTotal = purchaseBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0)
-
-//     const totalFundsGiven = funds.reduce((sum, f) => sum + f.givenAmount, 0)
-
-//     res.json({
-//       totalSales,
-//       totalPurchases,
-//       totalExpenses,
-//       grossProfit,
-//       netProfit,
-//       salesCount: sales.length,
-//       purchaseCount: purchases.length,
-//       expenseCount: expenses.length,
-//       borrowDetails: {
-//         sales: { totalBorrow: borrowSalesTotal, count: saleBorrows.length },
-//         purchases: { totalBorrow: borrowPurchasesTotal, count: purchaseBorrows.length },
-//       },
-//       // ✅ Add this
-//       fundDetails: {
-//         totalFundsGiven,
-//         count: funds.length,
-//         transactions: funds.map((f) => ({
-//           id: f.id,
-//           givenBy: f.givenBy,
-//           ownerName: f.owner?.name || "Unknown",
-//           givenAmount: f.givenAmount,
-//           remainingAmount: f.remainingAmount,
-//           date: f.createdAt,
-//         })),
-//       },
-//     })
-//   } catch (error) {
-//     res.status(500).json({ error: error.message })
-//   }
-// }
-
 export const getProfitLossSummary = async (req, res) => {
   try {
     const userId = req.userId
@@ -188,30 +98,109 @@ export const getProfitLossSummary = async (req, res) => {
   }
 }
 
+// Get daily report
+// export const getDailyReport = async (req, res) => {
+//   try {
+//     const userId = req.userId
+//     const { date, shopId } = req.query
+
+//     const user = await prisma.user.findUnique({ where: { id: userId } })
+//     if (!user || user.role !== "admin") {
+//       return res.status(403).json({ error: "Unauthorized" })
+//     }
+
+//     const startDate = new Date(date)
+//     const endDate = new Date(date)
+//     endDate.setDate(endDate.getDate() + 1)
+
+//     // Build where clause - admin sees all workers' data, optionally filtered by shop
+//     let userIds = null
+//     if (shopId && shopId !== "all") {
+//       const users = await prisma.user.findMany({
+//         where: { shopId, role: "worker" },
+//         select: { id: true },
+//       })
+//       userIds = users.map((u) => u.id)
+//       if (userIds.length === 0) {
+//         // No users for this shop, return empty data
+//         return res.json({
+//           date,
+//           sales: [],
+//           purchases: [],
+//           expenses: [],
+//           totalSales: 0,
+//           totalPurchases: 0,
+//           totalExpenses: 0,
+//           profit: 0,
+//         })
+//       }
+//     }
+
+//     const buildWhere = (dateField) => {
+//       const where = { [dateField]: { gte: startDate, lt: endDate } }
+//       if (userIds) {
+//         where.userId = { in: userIds }
+//       }
+//       return where
+//     }
+
+//     const [sales, purchases, expenses] = await Promise.all([
+//       prisma.sale.findMany({
+//         where: buildWhere("saleDate"),
+//         include: { item: true, user: true },
+//       }),
+//       prisma.purchase.findMany({
+//         where: buildWhere("purchaseDate"),
+//         include: { item: true, user: true },
+//       }),
+//       prisma.expense.findMany({
+//         where: buildWhere("date"),
+//         include: { user: true },
+//       }),
+//     ])
+
+//     const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0)
+//     const totalPurchases = purchases.reduce((sum, p) => sum + p.totalAmount, 0)
+//     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0)
+
+//     res.json({
+//       date,
+//       sales,
+//       purchases,
+//       expenses,
+//       totalSales,
+//       totalPurchases,
+//       totalExpenses,
+//       profit: totalSales - totalPurchases - totalExpenses,
+//     })
+//   } catch (error) {
+//     res.status(500).json({ error: error.message })
+//   }
+// }
 
 // Get daily report
 export const getDailyReport = async (req, res) => {
   try {
-    const userId = req.userId
-    const { date, shopId } = req.query
+    const userId = req.userId;
+    const { date, shopId } = req.query;
 
-    const user = await prisma.user.findUnique({ where: { id: userId } })
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.role !== "admin") {
-      return res.status(403).json({ error: "Unauthorized" })
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const startDate = new Date(date)
-    const endDate = new Date(date)
-    endDate.setDate(endDate.getDate() + 1)
+    const startDate = new Date(date);
+    const endDate = new Date(date);
+    endDate.setDate(endDate.getDate() + 1);
 
     // Build where clause - admin sees all workers' data, optionally filtered by shop
-    let userIds = null
+    let userIds = null;
     if (shopId && shopId !== "all") {
       const users = await prisma.user.findMany({
         where: { shopId, role: "worker" },
         select: { id: true },
-      })
-      userIds = users.map((u) => u.id)
+      });
+      userIds = users.map((u) => u.id);
       if (userIds.length === 0) {
         // No users for this shop, return empty data
         return res.json({
@@ -223,17 +212,19 @@ export const getDailyReport = async (req, res) => {
           totalPurchases: 0,
           totalExpenses: 0,
           profit: 0,
-        })
+          totalSaleQuantity: 0,
+          totalPurchaseQuantity: 0,
+        });
       }
     }
 
     const buildWhere = (dateField) => {
-      const where = { [dateField]: { gte: startDate, lt: endDate } }
+      const where = { [dateField]: { gte: startDate, lt: endDate } };
       if (userIds) {
-        where.userId = { in: userIds }
+        where.userId = { in: userIds };
       }
-      return where
-    }
+      return where;
+    };
 
     const [sales, purchases, expenses] = await Promise.all([
       prisma.sale.findMany({
@@ -248,11 +239,15 @@ export const getDailyReport = async (req, res) => {
         where: buildWhere("date"),
         include: { user: true },
       }),
-    ])
+    ]);
 
-    const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0)
-    const totalPurchases = purchases.reduce((sum, p) => sum + p.totalAmount, 0)
-    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0)
+    const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0);
+    const totalPurchases = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+    // Add total quantities (weights)
+    const totalSaleQuantity = sales.reduce((sum, s) => sum + (s.quantity || 0), 0);
+    const totalPurchaseQuantity = purchases.reduce((sum, p) => sum + (p.quantity || 0), 0);
 
     res.json({
       date,
@@ -263,11 +258,15 @@ export const getDailyReport = async (req, res) => {
       totalPurchases,
       totalExpenses,
       profit: totalSales - totalPurchases - totalExpenses,
-    })
+      totalSaleQuantity,
+      totalPurchaseQuantity,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    console.error("❌ Error in getDailyReport:", error);
+    res.status(500).json({ error: error.message });
   }
-}
+};
+
 
 // Generate Excel report
 export const generateExcelReport = async (req, res) => {

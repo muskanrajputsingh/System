@@ -35,7 +35,6 @@ export default function AllShopsData() {
     // Make sure data is always an array
     setSales(Array.isArray(salesRes.data.data) ? salesRes.data.data : [])
     setPurchases(Array.isArray(purchasesRes.data.data) ? purchasesRes.data.data : [])
-
     setSalesPage(1)
     setPurchasePage(1)
   } catch (error) {

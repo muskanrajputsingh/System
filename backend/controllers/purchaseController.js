@@ -107,7 +107,7 @@ export const getPurchases = async (req, res) => {
 
     let where = {};
 
-    // 🧑‍💼 Admin logic
+    //  Admin logic
     if (user.role === "admin") {
       if (shopId && shopId !== "all") {
         const users = await prisma.user.findMany({
@@ -120,7 +120,7 @@ export const getPurchases = async (req, res) => {
         else return res.json({ data: [], totalCount: 0 });
       }
 
-      // 🗓️ Apply date range filter if admin selected any date(s)
+      // Apply date range filter if admin selected any date(s)
       if (startDate) {
         const startUTC = new Date(`${startDate}T00:00:00+05:30`);
         const endUTC = endDate
@@ -131,7 +131,7 @@ export const getPurchases = async (req, res) => {
       }
     }
 
-    // 👷 Worker logic — always today's IST
+    //  Worker logic — always today's IST
     else {
       where.userId = req.userId;
 
@@ -146,10 +146,10 @@ export const getPurchases = async (req, res) => {
       where.purchaseDate = { gte: startUTC, lte: endUTC };
     }
 
-    // 📄 Pagination setup
+    // Pagination setup
     const skip = (Number(page) - 1) * Number(limit);
 
-    // 🧭 Fetch filtered data
+    //  Fetch filtered data
     const [purchases, totalCount] = await Promise.all([
       prisma.purchase.findMany({
         where,
@@ -172,7 +172,7 @@ export const getPurchases = async (req, res) => {
       prisma.purchase.count({ where }),
     ]);
 
-    // 🕒 Convert UTC → IST
+    //  Convert UTC → IST
     const formattedPurchases = purchases.map((p) => ({
       ...p,
       purchaseDateIST: new Date(p.purchaseDate).toLocaleString("en-IN", {

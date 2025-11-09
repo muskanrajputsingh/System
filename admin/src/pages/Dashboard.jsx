@@ -30,7 +30,6 @@ export default function Dashboard({ user }) {
     }
   }
 
-
 const fetchShopWiseStats = async () => {
   try {
     const today = new Date().toISOString().split("T")[0]
@@ -101,12 +100,14 @@ const fetchShopWiseStats = async () => {
             <h3>Today's Sales</h3>
             <p className="amount">₹{stats.totalSales.toLocaleString()}</p>
             <p className="count">{stats.sales.length} transactions</p>
+           <p className="stat-extra">Total Quantity: {stats.totalSaleQuantity || 0} kg</p>
           </div>
 
           <div className="stat-card purchases">
             <h3>Today's Purchases</h3>
             <p className="amount">₹{stats.totalPurchases.toLocaleString()}</p>
             <p className="count">{stats.purchases.length} transactions</p>
+            <p className="stat-extra">Total Quantity: {stats.totalPurchaseQuantity || 0} kg</p>
           </div>
 
           <div className="stat-card expenses">
