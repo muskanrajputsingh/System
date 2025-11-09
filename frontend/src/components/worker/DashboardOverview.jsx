@@ -92,7 +92,7 @@ export default function DashboardOverview({ stats, loading, onRefresh }) {
           </div>
           <p className="stat-value">₹{stats?.todaySales?.toFixed(2) || 0}</p>
           <p className="stat-label">revenue today</p>
-          <p className="stat-extra">Weight: {stats?.todaySalesWeight || 0} kg</p>
+          <p className="stat-extra">Weight: <b>{stats?.todaySalesWeight || 0} kg</b></p>
         </div>
         <div className="stat-card purchases clickable" onClick={() => navigate("/purchases")}>
           <div className="stat-header">
@@ -101,7 +101,7 @@ export default function DashboardOverview({ stats, loading, onRefresh }) {
           </div>
           <p className="stat-value">₹{stats?.todayPurchases?.toFixed(2) || 0}</p>
           <p className="stat-label">spent today</p>
-          <p className="stat-extra">Weight: {stats?.todayPurchaseWeight || 0} kg</p>
+          <p className="stat-extra">Weight: <b>{stats?.todayPurchaseWeight || 0} kg</b></p>
         </div>
       </div>
 
