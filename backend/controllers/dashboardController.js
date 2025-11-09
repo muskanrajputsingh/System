@@ -81,24 +81,12 @@ export const getStats = async (req, res) => {
       saleByItem[name] = (saleByItem[name] || 0) + s.quantity
     })
 
-    if (todayPurchases.length === 0) console.log("No purchases found today.")
+    if (todayPurchases.length === 0) 
     todayPurchases.forEach((p) => {
-      console.log(
-        `- Item: ${p.item?.name || "Unknown"} | Qty: ${p.quantity} | ₹${p.totalAmount || 0} | Date (IST): ${new Date(p.purchaseDate).toLocaleString("en-IN", {
-          timeZone: "Asia/Kolkata",
-          hour12: true,
-        })}`
-      )
     })
 
-    if (todaySales.length === 0) console.log("No sales found today.")
+    if (todaySales.length === 0) 
     todaySales.forEach((s) => {
-      console.log(
-        `- Item: ${s.item?.name || "Unknown"} | Qty: ${s.quantity} | ₹${s.totalAmount || 0} | Date (IST): ${new Date(s.saleDate).toLocaleString("en-IN", {
-          timeZone: "Asia/Kolkata",
-          hour12: true,
-        })}`
-      )
     })
 
     res.json({

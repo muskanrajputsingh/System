@@ -47,7 +47,6 @@ export default function AllShopsData() {
   }
 }
 
-
   const totalSales = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0)
   const totalPurchases = purchases.reduce((sum, p) => sum + (p.totalAmount || 0), 0)
 

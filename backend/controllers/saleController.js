@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client"
-
 const prisma = new PrismaClient()
 
 export const createSale = async (req, res) => {
@@ -53,14 +52,96 @@ export const createSale = async (req, res) => {
   }
 }
 
+// export const getSales = async (req, res) => {
+//   try {
+//     const { shopId, page = 1, limit = 50 } = req.query;
+//     const user = await prisma.user.findUnique({ where: { id: req.userId } });
+
+//     let where = {};
+
+//     //  Role-based filtering
+//     if (user.role === "admin") {
+//       if (shopId && shopId !== "all") {
+//         const users = await prisma.user.findMany({
+//           where: { shopId, role: "worker" },
+//           select: { id: true },
+//         });
+//         const userIds = users.map((u) => u.id);
+//         if (userIds.length > 0) where.userId = { in: userIds };
+//         else return res.json({ data: [], totalCount: 0 });
+//       }
+//     } else {
+//       where.userId = req.userId;
+//     }
+
+//     // Auto filter for TODAY (India time)
+//     const now = new Date();
+//     const todayIST = new Date(
+//       now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+//     );
+//     const startOfDayIST = new Date(todayIST);
+//     startOfDayIST.setHours(0, 0, 0, 0);
+//     const endOfDayIST = new Date(todayIST);
+//     endOfDayIST.setHours(23, 59, 59, 999);
+
+//     // Convert IST time range to UTC for DB filter
+//     const startUTC = new Date(
+//       startOfDayIST.getTime() - 5.5 * 60 * 60 * 1000
+//     );
+//     const endUTC = new Date(
+//       endOfDayIST.getTime() - 5.5 * 60 * 60 * 1000
+//     );
+
+//     where.saleDate = { gte: startUTC, lte: endUTC };
+
+//     const skip = (Number(page) - 1) * Number(limit);
+
+//     const [sales, totalCount] = await Promise.all([
+//       prisma.sale.findMany({
+//         where,
+//         select: {
+//           id: true,
+//           saleDate: true,
+//           quantity: true,
+//           unitPrice: true,
+//           totalAmount: true,
+//           paymentType: true,
+//           borrowAmount: true,
+//           customerName: true,
+//           item: { select: { name: true } },
+//           user: { select: { name: true } },
+//         },
+//         skip,
+//         take: Number(limit),
+//         orderBy: { saleDate: "desc" },
+//       }),
+//       prisma.sale.count({ where }),
+//     ]);
+
+//     // Convert sale date to IST for frontend
+//     const formattedSales = sales.map((s) => ({
+//       ...s,
+//       saleDateIST: new Date(s.saleDate).toLocaleString("en-IN", {
+//         timeZone: "Asia/Kolkata",
+//         hour12: true,
+//       }),
+//     }));
+
+//     res.json({ data: formattedSales, totalCount });
+//   } catch (error) {
+//     console.error("❌ Error in getSales:", error);
+//     res.status(400).json({ error: error.message });
+//   }
+// };
+
 export const getSales = async (req, res) => {
   try {
-    const { shopId, page = 1, limit = 50 } = req.query;
+    const { startDate, endDate, shopId, page = 1, limit = 50 } = req.query;
     const user = await prisma.user.findUnique({ where: { id: req.userId } });
 
     let where = {};
 
-    //  Role-based filtering
+    // 🧠 Role-based filtering
     if (user.role === "admin") {
       if (shopId && shopId !== "all") {
         const users = await prisma.user.findMany({
@@ -75,23 +156,27 @@ export const getSales = async (req, res) => {
       where.userId = req.userId;
     }
 
-    // Auto filter for TODAY (India time)
-    const now = new Date();
-    const todayIST = new Date(
-      now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-    );
-    const startOfDayIST = new Date(todayIST);
-    startOfDayIST.setHours(0, 0, 0, 0);
-    const endOfDayIST = new Date(todayIST);
-    endOfDayIST.setHours(23, 59, 59, 999);
+    // 🕒 Date filter logic
+    let startUTC, endUTC;
 
-    // Convert IST time range to UTC for DB filter
-    const startUTC = new Date(
-      startOfDayIST.getTime() - 5.5 * 60 * 60 * 1000
-    );
-    const endUTC = new Date(
-      endOfDayIST.getTime() - 5.5 * 60 * 60 * 1000
-    );
+    if (startDate && endDate) {
+      // If frontend provides range, respect that (IST → UTC)
+      startUTC = new Date(`${startDate}T00:00:00+05:30`);
+      endUTC = new Date(`${endDate}T23:59:59+05:30`);
+    } else {
+      // Otherwise, default to today’s IST range
+      const now = new Date();
+      const todayIST = new Date(
+        now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+      );
+      const startOfDayIST = new Date(todayIST);
+      startOfDayIST.setHours(0, 0, 0, 0);
+      const endOfDayIST = new Date(todayIST);
+      endOfDayIST.setHours(23, 59, 59, 999);
+
+      startUTC = new Date(startOfDayIST.getTime() - 5.5 * 60 * 60 * 1000);
+      endUTC = new Date(endOfDayIST.getTime() - 5.5 * 60 * 60 * 1000);
+    }
 
     where.saleDate = { gte: startUTC, lte: endUTC };
 
@@ -119,7 +204,7 @@ export const getSales = async (req, res) => {
       prisma.sale.count({ where }),
     ]);
 
-    // Convert sale date to IST for frontend
+    // Convert UTC → IST
     const formattedSales = sales.map((s) => ({
       ...s,
       saleDateIST: new Date(s.saleDate).toLocaleString("en-IN", {
