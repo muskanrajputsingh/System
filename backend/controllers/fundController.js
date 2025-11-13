@@ -297,25 +297,31 @@ export const addWorkerFund = async (req, res) => {
   }
 }
 
-
 export const getWorkerFund = async (req, res) => {
   try {
-    const userId = req.userId
+    const userId = req.userId;
+
     const worker = await prisma.worker.findFirst({
       where: { userId },
       include: { user: true },
-    })
+    });
 
-    if (!worker) return res.status(404).json({ error: "Worker not found" })
-    if (!worker.user.shopId) return res.status(400).json({ error: "Worker not linked to any shop" })
+    if (!worker) return res.status(404).json({ error: "Worker not found" });
+    if (!worker.user.shopId) return res.status(400).json({ error: "Worker not linked to any shop" });
 
+    // get all funds for the worker’s shop
     const funds = await prisma.workerFund.findMany({
       where: { shopId: worker.user.shopId },
       orderBy: { createdAt: "desc" },
-    })
+    });
+    
+    const totalRemaining = funds.reduce((sum, f) => sum + (f.remainingAmount || 0), 0);
 
-    res.json(funds)
+    res.json({
+      currentRemaining: totalRemaining,
+      funds,
+    });
   } catch (err) {
-    res.status(400).json({ error: err.message })
+    res.status(400).json({ error: err.message });
   }
-}
+};
