@@ -22,15 +22,17 @@ export default function DashboardOverview({ stats, loading, onRefresh }) {
     fetchBalance()
   }, [])
 
+
   const fetchBalance = async () => {
-    try {
-      const { data } = await api.get("/funds")
-      setBalance(data.remainingAmount || 0)
-    } catch (err) {
-      console.error("Error fetching balance:", err)
-      setBalance(0)
-    }
+  try {
+    const { data } = await api.get("/funds")
+    setBalance(data.currentRemaining || 0) 
+  } catch (err) {
+    console.error("Error fetching balance:", err)
+    setBalance(0)
   }
+}
+
 
   if (loading) return <div className="loading">Loading stats...</div>
 
