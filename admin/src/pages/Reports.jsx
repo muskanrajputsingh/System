@@ -69,17 +69,19 @@ export default function Reports() {
 {reportData && (
   <div className="report-summary">
     <div className="report-card sales">
-      <h3>Total Sales</h3>
-      <p className="amount">₹{reportData.totalSales.toLocaleString()}</p>
-      <p className="count">{reportData.salesCount || reportData.sales?.length || 0} transactions</p>
-    </div>
+  <h3>Total Sales</h3>
+  <p className="amount">₹{reportData.totalSales.toLocaleString()}</p>
+  <p className="count">{reportData.salesCount || 0} transactions</p>
+  <p className="count"><b>Total Quantity: {reportData.totalSaleQuantity || 0} Kg</b></p>
+</div>
+
 
     <div className="report-card purchases">
-      <h3>Total Purchases</h3>
-      <p className="amount">₹{reportData.totalPurchases.toLocaleString()}</p>
-      <p className="count">{reportData.purchaseCount || reportData.purchases?.length || 0} transactions</p>
-    </div>
-
+  <h3>Total Purchases</h3>
+  <p className="amount">₹{reportData.totalPurchases.toLocaleString()}</p>
+  <p className="count">{reportData.purchaseCount || 0} transactions</p>
+  <p className="count"><b>Total Quantity: {reportData.totalPurchaseQuantity || 0} Kg</b></p>
+</div>
     {/* Borrow Sales */}
     {reportData.borrowDetails?.sales?.count > 0 && (
       <div className="report-card borrow">
@@ -130,10 +132,10 @@ export default function Reports() {
         <tr>
           <th>Date</th>
           <th>Time</th>
-          <th>Worker Name</th>
+          <th>Shop ID</th>
           <th>Given By</th>
           <th>Amount (₹)</th>
-          <th>Remaining Amount (₹)</th>
+          <th>Bachat (₹)</th>
         </tr>
       </thead>
       <tbody>
@@ -149,7 +151,7 @@ export default function Reports() {
                   hour12: true,
                 })}
               </td>
-              <td>{t.shopId || reportData.fundDetails.shopId || "-"}</td>
+              <td>{t.shopId || "-"}</td>
               <td>{t.givenBy}</td>
               <td>₹{t.givenAmount.toLocaleString()}</td>
               <td>₹{t.remainingAmount?.toLocaleString() || 0}</td>

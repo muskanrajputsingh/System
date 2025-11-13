@@ -359,8 +359,14 @@ export default function AllShopsData() {
     }
   }
 
-  const totalSales = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0)
-  const totalPurchases = purchases.reduce((sum, p) => sum + (p.totalAmount || 0), 0)
+  // Total amounts
+const totalSales = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0)
+const totalPurchases = purchases.reduce((sum, p) => sum + (p.totalAmount || 0), 0)
+
+// ✅ Total quantities
+const totalSalesQty = sales.reduce((sum, s) => sum + (s.quantity || 0), 0)
+const totalPurchaseQty = purchases.reduce((sum, p) => sum + (p.quantity || 0), 0)
+
 
   const handleEdit = (item, type) => {
     setEditingItem({ ...item })
@@ -440,21 +446,25 @@ export default function AllShopsData() {
         </div>
       </div>
 
-      {/* Summary */}
-      <div className="summary-cards">
-        <div className="summary-card">
-          <h3>Total Sales</h3>
-          <p className="amount">₹{totalSales.toLocaleString()}</p>
-        </div>
-        <div className="summary-card">
-          <h3>Total Purchases</h3>
-          <p className="amount">₹{totalPurchases.toLocaleString()}</p>
-        </div>
-        <div className="summary-card">
-          <h3>Gross Profit</h3>
-          <p className="amount">₹{(totalSales - totalPurchases).toLocaleString()}</p>
-        </div>
-      </div>
+        {/* Summary */}
+    <div className="summary-cards">
+    <div className="summary-card">
+      <h3>Total Sales</h3>
+      <p className="amount">₹{totalSales.toLocaleString()}</p>
+      <p className="qty">Total Qty: {totalSalesQty} Kg</p> 
+    </div>
+
+    <div className="summary-card">
+      <h3>Total Purchases</h3>
+      <p className="amount">₹{totalPurchases.toLocaleString()}</p>
+      <p className="qty">Total Qty: {totalPurchaseQty} Kg</p>
+    </div>
+
+    <div className="summary-card">
+      <h3>Gross Profit</h3>
+      <p className="amount">₹{(totalSales - totalPurchases).toLocaleString()}</p>
+    </div>
+  </div>
 
       {/* Sales Section */}
       <div className="data-section">

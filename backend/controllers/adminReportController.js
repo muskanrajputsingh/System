@@ -1,60 +1,166 @@
 import { prisma } from "../index.js"
 import ExcelJS from "exceljs"
 
+// export const getProfitLossSummary = async (req, res) => {
+//   try {
+//     const userId = req.userId
+//     const { startDate, endDate } = req.query
+
+//     const user = await prisma.user.findUnique({ where: { id: userId } })
+//     if (user.role !== "admin") {
+//       return res.status(403).json({ error: "Unauthorized" })
+//     }
+
+//     const start = new Date(startDate)
+//     const end = new Date(endDate)
+//     end.setHours(23, 59, 59, 999)
+
+//     const [sales, purchases, expenses, workerExpenses, saleBorrows, purchaseBorrows, funds] = await Promise.all([
+//       prisma.sale.findMany({
+//         where: { saleDate: { gte: start, lte: end } },
+//         include: { item: true, user: true },
+//       }),
+//       prisma.purchase.findMany({
+//         where: { purchaseDate: { gte: start, lte: end } },
+//         include: { item: true, user: true },
+//       }),
+//       prisma.expense.findMany({
+//         where: { date: { gte: start, lte: end } },
+//       }),
+//       prisma.workerExpense.findMany({
+//         where: { date: { gte: start, lte: end } },
+//         include: { worker: true },
+//       }),
+//       prisma.sale.findMany({
+//         where: { saleDate: { gte: start, lte: end }, paymentType: "borrow" },
+//       }),
+//       prisma.purchase.findMany({
+//         where: { purchaseDate: { gte: start, lte: end }, paymentType: "borrow" },
+//       }),
+//       prisma.workerFund.findMany({
+//         where: { createdAt: { gte: start, lte: end } },
+//         include: { owner: true },
+//         orderBy: { createdAt: "desc" },
+//       }),
+//     ])
+
+//     // Totals
+//     const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0)
+//     const totalPurchases = purchases.reduce((sum, p) => sum + p.totalAmount, 0)
+//     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0)
+//     const totalWorkerExpenses = workerExpenses.reduce((sum, e) => sum + e.amount, 0)
+//     const grossProfit = totalSales - totalPurchases
+//     const netProfit = grossProfit - (totalExpenses + totalWorkerExpenses)
+
+//     const borrowSalesTotal = saleBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0)
+//     const borrowPurchasesTotal = purchaseBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0)
+//     const totalFundsGiven = funds.reduce((sum, f) => sum + f.givenAmount, 0)
+
+//     res.json({
+//       totalSales,
+//       totalPurchases,
+//       totalExpenses: totalExpenses + totalWorkerExpenses,
+//       grossProfit,
+//       netProfit,
+//       salesCount: sales.length,
+//       purchaseCount: purchases.length,
+//       expenseCount: expenses.length + workerExpenses.length,
+//       borrowDetails: {
+//         sales: { totalBorrow: borrowSalesTotal, count: saleBorrows.length },
+//         purchases: { totalBorrow: borrowPurchasesTotal, count: purchaseBorrows.length },
+//       },
+//      fundDetails: {
+//   totalFundsGiven,
+//   count: funds.length,
+//   transactions: funds.map((f) => ({
+//     id: f.id,
+//     shopId: f.shopId || "-",   
+//     givenBy: f.givenBy,
+//     ownerName: f.owner?.name || "Unknown",
+//     givenAmount: f.givenAmount,
+//     remainingAmount: f.remainingAmount,
+//     date: f.createdAt,
+//   })),
+// },
+
+//       workerExpenseDetails: {
+//         totalWorkerExpenses,
+//         count: workerExpenses.length,
+//         transactions: workerExpenses.map((e) => ({
+//           id: e.id,
+//           workerName: e.worker?.name || "Unknown",
+//           title: e.title,
+//           amount: e.amount,
+//           date: e.date,
+//         })),
+//       },
+//     })
+//   } catch (error) {
+//     res.status(500).json({ error: error.message })
+//   }
+// }
+
+// Get daily report
+
 export const getProfitLossSummary = async (req, res) => {
   try {
-    const userId = req.userId
-    const { startDate, endDate } = req.query
+    const userId = req.userId;
+    const { startDate, endDate } = req.query;
 
-    const user = await prisma.user.findUnique({ where: { id: userId } })
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (user.role !== "admin") {
-      return res.status(403).json({ error: "Unauthorized" })
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const start = new Date(startDate)
-    const end = new Date(endDate)
-    end.setHours(23, 59, 59, 999)
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
 
-    const [sales, purchases, expenses, workerExpenses, saleBorrows, purchaseBorrows, funds] = await Promise.all([
-      prisma.sale.findMany({
-        where: { saleDate: { gte: start, lte: end } },
-        include: { item: true, user: true },
-      }),
-      prisma.purchase.findMany({
-        where: { purchaseDate: { gte: start, lte: end } },
-        include: { item: true, user: true },
-      }),
-      prisma.expense.findMany({
-        where: { date: { gte: start, lte: end } },
-      }),
-      prisma.workerExpense.findMany({
-        where: { date: { gte: start, lte: end } },
-        include: { worker: true },
-      }),
-      prisma.sale.findMany({
-        where: { saleDate: { gte: start, lte: end }, paymentType: "borrow" },
-      }),
-      prisma.purchase.findMany({
-        where: { purchaseDate: { gte: start, lte: end }, paymentType: "borrow" },
-      }),
-      prisma.workerFund.findMany({
-        where: { createdAt: { gte: start, lte: end } },
-        include: { owner: true },
-        orderBy: { createdAt: "desc" },
-      }),
-    ])
+    const [sales, purchases, expenses, workerExpenses, saleBorrows, purchaseBorrows, funds] =
+      await Promise.all([
+        prisma.sale.findMany({
+          where: { saleDate: { gte: start, lte: end } },
+          include: { item: true, user: true },
+        }),
+        prisma.purchase.findMany({
+          where: { purchaseDate: { gte: start, lte: end } },
+          include: { item: true, user: true },
+        }),
+        prisma.expense.findMany({
+          where: { date: { gte: start, lte: end } },
+        }),
+        prisma.workerExpense.findMany({
+          where: { date: { gte: start, lte: end } },
+          include: { worker: true },
+        }),
+        prisma.sale.findMany({
+          where: { saleDate: { gte: start, lte: end }, paymentType: "borrow" },
+        }),
+        prisma.purchase.findMany({
+          where: { purchaseDate: { gte: start, lte: end }, paymentType: "borrow" },
+        }),
+        prisma.workerFund.findMany({
+          where: { createdAt: { gte: start, lte: end } },
+          include: { owner: true },
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
 
     // Totals
-    const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0)
-    const totalPurchases = purchases.reduce((sum, p) => sum + p.totalAmount, 0)
-    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0)
-    const totalWorkerExpenses = workerExpenses.reduce((sum, e) => sum + e.amount, 0)
-    const grossProfit = totalSales - totalPurchases
-    const netProfit = grossProfit - (totalExpenses + totalWorkerExpenses)
+    const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0);
+    const totalPurchases = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalWorkerExpenses = workerExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const grossProfit = totalSales - totalPurchases;
+    const netProfit = grossProfit - (totalExpenses + totalWorkerExpenses);
 
-    const borrowSalesTotal = saleBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0)
-    const borrowPurchasesTotal = purchaseBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0)
-    const totalFundsGiven = funds.reduce((sum, f) => sum + f.givenAmount, 0)
+    // ✅ Total Quantities
+    const totalSaleQuantity = sales.reduce((sum, s) => sum + (s.quantity || 0), 0);
+    const totalPurchaseQuantity = purchases.reduce((sum, p) => sum + (p.quantity || 0), 0);
+
+    const borrowSalesTotal = saleBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0);
+    const borrowPurchasesTotal = purchaseBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0);
+    const totalFundsGiven = funds.reduce((sum, f) => sum + f.givenAmount, 0);
 
     res.json({
       totalSales,
@@ -65,6 +171,11 @@ export const getProfitLossSummary = async (req, res) => {
       salesCount: sales.length,
       purchaseCount: purchases.length,
       expenseCount: expenses.length + workerExpenses.length,
+
+      // ✅ Add these new fields
+      totalSaleQuantity,
+      totalPurchaseQuantity,
+
       borrowDetails: {
         sales: { totalBorrow: borrowSalesTotal, count: saleBorrows.length },
         purchases: { totalBorrow: borrowPurchasesTotal, count: purchaseBorrows.length },
@@ -74,6 +185,7 @@ export const getProfitLossSummary = async (req, res) => {
         count: funds.length,
         transactions: funds.map((f) => ({
           id: f.id,
+          shopId: f.shopId || "-",
           givenBy: f.givenBy,
           ownerName: f.owner?.name || "Unknown",
           givenAmount: f.givenAmount,
@@ -92,13 +204,13 @@ export const getProfitLossSummary = async (req, res) => {
           date: e.date,
         })),
       },
-    })
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
-}
+};
 
-// Get daily report
+
 export const getDailyReport = async (req, res) => {
   try {
     const userId = req.userId;
@@ -435,236 +547,3 @@ export const generateExcelReport = async (req, res) => {
     res.status(500).json({ error: error.message })
   }
 }
-
-// export const generateExcelReport = async (req, res) => {
-//   try {
-//     const userId = req.userId
-//     const { startDate, endDate } = req.query
-
-//     const user = await prisma.user.findUnique({ where: { id: userId } })
-//     if (user.role !== "admin") {
-//       return res.status(403).json({ error: "Unauthorized" })
-//     }
-
-//     const start = new Date(startDate)
-//     const end = new Date(endDate)
-//     end.setHours(23, 59, 59, 999)
-
-//     // Fetch all data including funds
-//     const [sales, purchases, expenses, saleBorrows, purchaseBorrows, funds] = await Promise.all([
-//       prisma.sale.findMany({
-//         where: { saleDate: { gte: start, lte: end } },
-//         include: { item: true, user: true },
-//       }),
-//       prisma.purchase.findMany({
-//         where: { purchaseDate: { gte: start, lte: end } },
-//         include: { item: true, user: true },
-//       }),
-//       prisma.expense.findMany({
-//         where: { date: { gte: start, lte: end } },
-//       }),
-//       prisma.sale.findMany({
-//         where: { saleDate: { gte: start, lte: end }, paymentType: "borrow" },
-//         include: { item: true, user: true },
-//       }),
-//       prisma.purchase.findMany({
-//         where: { purchaseDate: { gte: start, lte: end }, paymentType: "borrow" },
-//         include: { item: true, user: true },
-//       }),
-//       prisma.workerFund.findMany({
-//         where: { createdAt: { gte: start, lte: end } },
-//         include: { owner: true },
-//       }),
-//     ])
-
-//     const workbook = new ExcelJS.Workbook()
-
-//     // 🧾 Sales Sheet
-//     const salesSheet = workbook.addWorksheet("Sales")
-//     salesSheet.columns = [
-//       { header: "Date", key: "saleDate", width: 12 },
-//       { header: "Item", key: "itemName", width: 20 },
-//       { header: "Customer", key: "customerName", width: 20 },
-//       { header: "Quantity", key: "quantity", width: 10 },
-//       { header: "Unit Price", key: "unitPrice", width: 12 },
-//       { header: "Total Amount", key: "totalAmount", width: 15 },
-//       { header: "Payment Type", key: "paymentType", width: 15 },
-//       { header: "Borrow Amount", key: "borrowAmount", width: 15 },
-//     ]
-//     sales.forEach((s) => {
-//       salesSheet.addRow({
-//         saleDate: new Date(s.saleDate).toLocaleDateString(),
-//         itemName: s.item?.name || "-",
-//         customerName: s.customerName || "-",
-//         quantity: s.quantity || 0,
-//         unitPrice: s.unitPrice || 0,
-//         totalAmount: s.totalAmount || 0,
-//         paymentType: s.paymentType || "paid",
-//         borrowAmount: s.borrowAmount || 0,
-//       })
-//     })
-
-//     // 🧾 Purchases Sheet
-//     const purchaseSheet = workbook.addWorksheet("Purchases")
-//     purchaseSheet.columns = [
-//       { header: "Date", key: "purchaseDate", width: 12 },
-//       { header: "Item", key: "itemName", width: 20 },
-//       { header: "Supplier", key: "supplierName", width: 20 },
-//       { header: "Quantity", key: "quantity", width: 10 },
-//       { header: "Unit Price", key: "unitPrice", width: 12 },
-//       { header: "Total Amount", key: "totalAmount", width: 15 },
-//       { header: "Payment Type", key: "paymentType", width: 15 },
-//       { header: "Borrow Amount", key: "borrowAmount", width: 15 },
-//     ]
-//     purchases.forEach((p) => {
-//       purchaseSheet.addRow({
-//         purchaseDate: new Date(p.purchaseDate).toLocaleDateString(),
-//         itemName: p.item?.name || "-",
-//         supplierName: p.supplierName || "-",
-//         quantity: p.quantity || 0,
-//         unitPrice: p.unitPrice || 0,
-//         totalAmount: p.totalAmount || 0,
-//         paymentType: p.paymentType || "-",
-//         borrowAmount: p.borrowAmount || 0,
-//       })
-//     })
-
-//     // 🧾 Expenses Sheet
-//     const expenseSheet = workbook.addWorksheet("Expenses")
-//     expenseSheet.columns = [
-//       { header: "Date", key: "date", width: 12 },
-//       { header: "Title", key: "title", width: 20 },
-//       { header: "Category", key: "category", width: 15 },
-//       { header: "Amount", key: "amount", width: 12 },
-//     ]
-//     expenses.forEach((e) => {
-//       expenseSheet.addRow({
-//         date: new Date(e.date).toLocaleDateString(),
-//         title: e.title || "-",
-//         category: e.category || "-",
-//         amount: e.amount || 0,
-//       })
-//     })
-
-//     // 🧾 Borrow Summary Sheet
-//     const borrowSheet = workbook.addWorksheet("Borrow Summary (Details)")
-//     borrowSheet.columns = [
-//       { header: "Type", key: "type", width: 15 },
-//       { header: "Date", key: "date", width: 12 },
-//       { header: "Item", key: "itemName", width: 20 },
-//       { header: "Name", key: "name", width: 25 },
-//       { header: "Contact", key: "contact", width: 20 },
-//       { header: "Quantity", key: "quantity", width: 10 },
-//       { header: "Borrow Amount", key: "borrowAmount", width: 15 },
-//       { header: "Total Amount", key: "totalAmount", width: 15 },
-//     ]
-
-//     const fundSheet = workbook.addWorksheet("Owner Funds")
-//     fundSheet.columns = [
-//       { header: "Date", key: "date", width: 15 },
-//       { header: "Owner Name", key: "ownerName", width: 20 },
-//       { header: "Given By", key: "givenBy", width: 20 },
-//       { header: "Amount (₹)", key: "givenAmount", width: 15 },
-//       { header: "Remaining (₹)", key: "remainingAmount", width: 15 },
-//     ]
-
-//     // Borrow Sales details
-//     saleBorrows.forEach((b) => {
-//       borrowSheet.addRow({
-//         type: "Sale Borrow",
-//         date: new Date(b.saleDate).toLocaleDateString(),
-//         itemName: b.item?.name || "-",
-//         name: b.customerName || "-",
-//         contact: b.customerContact || "-",
-//         quantity: b.quantity || 0,
-//         borrowAmount: b.borrowAmount || 0,
-//         totalAmount: b.totalAmount || 0,
-//       })
-//     })
-
-//     // Borrow Purchases details
-//     purchaseBorrows.forEach((b) => {
-//       borrowSheet.addRow({
-//         type: "Purchase Borrow",
-//         date: new Date(b.purchaseDate).toLocaleDateString(),
-//         itemName: b.item?.name || "-",
-//         name: b.supplierName || "-",
-//         contact: b.supplierContact || "-",
-//         quantity: b.quantity || 0,
-//         borrowAmount: b.borrowAmount || 0,
-//         totalAmount: b.totalAmount || 0,
-//       })
-//     })
-
-//     // 🧾 Funds
-//     funds.forEach((f) => {
-//       fundSheet.addRow({
-//         date: new Date(f.createdAt).toLocaleDateString(),
-//         ownerName: f.owner?.name || "-",
-//         givenBy: f.givenBy || "-",
-//         givenAmount: f.givenAmount || 0,
-//         remainingAmount: f.remainingAmount || 0,
-//       })
-//     })
-
-//     // Totals
-//     borrowSheet.addRow({})
-//     borrowSheet.addRow({
-//       type: "Total Borrow Sales",
-//       borrowAmount: saleBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0),
-//       totalAmount: saleBorrows.reduce((sum, b) => sum + b.totalAmount, 0),
-//     })
-//     borrowSheet.addRow({
-//       type: "Total Borrow Purchases",
-//       borrowAmount: purchaseBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0),
-//       totalAmount: purchaseBorrows.reduce((sum, b) => sum + b.totalAmount, 0),
-//     })
-
-//     fundSheet.addRow({})
-//     fundSheet.addRow({
-//       ownerName: "Total Funds Given",
-//       givenAmount: funds.reduce((sum, f) => sum + f.givenAmount, 0),
-//     })
-
-//     // 🧾 Summary Sheet
-//     const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0)
-//     const totalPurchases = purchases.reduce((sum, p) => sum + p.totalAmount, 0)
-//     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0)
-//     const grossProfit = totalSales - totalPurchases
-//     const netProfit = grossProfit - totalExpenses
-
-//     const summarySheet = workbook.addWorksheet("Summary")
-//     summarySheet.columns = [
-//       { header: "Metric", key: "metric", width: 25 },
-//       { header: "Amount", key: "amount", width: 15 },
-//     ]
-//     summarySheet.addRows([
-//       { metric: "Total Sales", amount: totalSales },
-//       { metric: "Total Purchases", amount: totalPurchases },
-//       { metric: "Gross Profit", amount: grossProfit },
-//       { metric: "Total Expenses", amount: totalExpenses },
-//       { metric: "Net Profit", amount: netProfit },
-//     ])
-
-//     // Send Excel File
-//     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-//     res.setHeader("Content-Disposition", `attachment; filename="report_${startDate}_to_${endDate}.xlsx"`)
-
-//     await workbook.xlsx.write(res)
-//     res.end()
-//   } catch (error) {
-//     console.error("Excel report error:", error)
-//     res.status(500).json({ error: error.message })
-//   }
-// }
-
-
-
-
-
-
-
-
-
-
-
