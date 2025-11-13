@@ -1,71 +1,7 @@
-// import { PrismaClient } from "@prisma/client"
-// const prisma = new PrismaClient()
-
-// // Owner gives amount to a shop (not just one worker)
-// export const addWorkerFund = async (req, res) => {
-//   try {
-//     const { amount, givenBy } = req.body
-//     const userId = req.userId // logged-in user's ID
-
-//     // find the worker for this user, include related user to access shopId
-//     const worker = await prisma.worker.findFirst({
-//       where: { userId },
-//       include: { user: true },
-//     })
-//     if (!worker) return res.status(404).json({ error: "Worker not found" })
-
-//     // find the shop this worker belongs to
-//     const shopId = worker.user.shopId
-//     if (!shopId) return res.status(400).json({ error: "Worker not linked to any shop" })
-
-//     // find admin
-//     const owner = await prisma.user.findFirst({ where: { role: "admin" } })
-//     if (!owner) return res.status(404).json({ error: "Owner not found" })
-
-//     // create or update fund for the shop
-//     const fund = await prisma.workerFund.create({
-//     data: {
-//     shopId,
-//     ownerId: owner.id,
-//     givenAmount: parseFloat(amount),
-//     remainingAmount: parseFloat(amount),
-//     givenBy,
-//   },
-//   })
-//     res.json(fund)
-//   } catch (err) {
-//     console.error(err)
-//     res.status(400).json({ error: err.message })
-//   }
-// }
-
-
-// export const getWorkerFund = async (req, res) => {
-//   try {
-//     const userId = req.userId
-//     const worker = await prisma.worker.findFirst({
-//       where: { userId },
-//       include: { user: true },
-//     })
-
-//     if (!worker) return res.status(404).json({ error: "Worker not found" })
-//     if (!worker.user.shopId) return res.status(400).json({ error: "Worker not linked to any shop" })
-
-//     const funds = await prisma.workerFund.findMany({
-//       where: { shopId: worker.user.shopId },
-//       orderBy: { createdAt: "desc" },
-//     })
-
-//     res.json(funds)
-//   } catch (err) {
-//     res.status(400).json({ error: err.message })
-//   }
-// }
-
 import { PrismaClient } from "@prisma/client"
 const prisma = new PrismaClient()
 
-// Add fund (each entry stored separately)
+
 export const addWorkerFund = async (req, res) => {
   try {
     const { amount, givenBy } = req.body
@@ -108,7 +44,7 @@ export const addWorkerFund = async (req, res) => {
       workerId: worker.id, 
       givenAmount: parseFloat(amount),
       remainingAmount: newRemaining,
-      givenBy: worker.name, 
+      givenBy, 
     },
   })
     res.json(fund)
@@ -118,7 +54,6 @@ export const addWorkerFund = async (req, res) => {
   }
 }
 
-// Get all funds + total balance
 export const getWorkerFund = async (req, res) => {
   try {
     const userId = req.userId
@@ -188,3 +123,66 @@ export const getWorkerFund = async (req, res) => {
 
 
 
+// import { PrismaClient } from "@prisma/client"
+// const prisma = new PrismaClient()
+
+// // Owner gives amount to a shop (not just one worker)
+// export const addWorkerFund = async (req, res) => {
+//   try {
+//     const { amount, givenBy } = req.body
+//     const userId = req.userId // logged-in user's ID
+
+//     // find the worker for this user, include related user to access shopId
+//     const worker = await prisma.worker.findFirst({
+//       where: { userId },
+//       include: { user: true },
+//     })
+//     if (!worker) return res.status(404).json({ error: "Worker not found" })
+
+//     // find the shop this worker belongs to
+//     const shopId = worker.user.shopId
+//     if (!shopId) return res.status(400).json({ error: "Worker not linked to any shop" })
+
+//     // find admin
+//     const owner = await prisma.user.findFirst({ where: { role: "admin" } })
+//     if (!owner) return res.status(404).json({ error: "Owner not found" })
+
+//     // create or update fund for the shop
+//     const fund = await prisma.workerFund.create({
+//     data: {
+//     shopId,
+//     ownerId: owner.id,
+//     givenAmount: parseFloat(amount),
+//     remainingAmount: parseFloat(amount),
+//     givenBy,
+//   },
+//   })
+//     res.json(fund)
+//   } catch (err) {
+//     console.error(err)
+//     res.status(400).json({ error: err.message })
+//   }
+// }
+
+
+// export const getWorkerFund = async (req, res) => {
+//   try {
+//     const userId = req.userId
+//     const worker = await prisma.worker.findFirst({
+//       where: { userId },
+//       include: { user: true },
+//     })
+
+//     if (!worker) return res.status(404).json({ error: "Worker not found" })
+//     if (!worker.user.shopId) return res.status(400).json({ error: "Worker not linked to any shop" })
+
+//     const funds = await prisma.workerFund.findMany({
+//       where: { shopId: worker.user.shopId },
+//       orderBy: { createdAt: "desc" },
+//     })
+
+//     res.json(funds)
+//   } catch (err) {
+//     res.status(400).json({ error: err.message })
+//   }
+// }
