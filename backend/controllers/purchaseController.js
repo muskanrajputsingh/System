@@ -127,7 +127,7 @@ export const createPurchase = async (req, res) => {
 
 export const getPurchases = async (req, res) => {
   try {
-    const { startDate, endDate, shopId, page = 1, limit = 50 } = req.query;
+    const { startDate, endDate, shopId,paymentType, page = 1, limit = 500 } = req.query;
     const user = await prisma.user.findUnique({ where: { id: req.userId } });
 
     let where = {};
@@ -154,8 +154,10 @@ export const getPurchases = async (req, res) => {
 
         where.purchaseDate = { gte: startUTC, lte: endUTC };
       }
+      if (paymentType && paymentType !== "all") {
+        where.paymentType = paymentType
+      }
     }
-
     //  Worker logic — always today's IST
     else {
       where.userId = req.userId;
@@ -230,16 +232,30 @@ export const updatePurchase = async (req, res) => {
       borrowAmount,
     } = req.body;
 
-    // ✅ Validate that either itemId or itemName is provided
-    let resolvedItemId = itemId;
+    // Validate quantity & unitPrice
+    if (!quantity || !unitPrice) {
+      return res.status(400).json({ error: "Quantity and Unit Price are required" });
+    }
 
+    // Fetch old purchase
+    const oldPurchase = await prisma.purchase.findUnique({
+      where: { id },
+      include: { item: true },
+    });
+
+    if (!oldPurchase) {
+      return res.status(404).json({ error: "Purchase not found" });
+    }
+
+    // Resolve itemId
+    let resolvedItemId = itemId;
     if (!resolvedItemId && itemName) {
       const existing = await prisma.item.findFirst({
         where: { userId: req.userId, name: itemName },
       });
-      if (existing) {
-        resolvedItemId = existing.id;
-      } else {
+
+      if (existing) resolvedItemId = existing.id;
+      else {
         const created = await prisma.item.create({
           data: {
             userId: req.userId,
@@ -257,21 +273,29 @@ export const updatePurchase = async (req, res) => {
       return res.status(400).json({ error: "itemId or itemName is required" });
     }
 
-    const qty = Number.parseFloat(quantity);
-    const price = Number.parseFloat(unitPrice);
-    const when = purchaseDate ? new Date(purchaseDate) : new Date();
+    const qty = parseFloat(quantity);
+    const price = parseFloat(unitPrice);
+    const totalAmount = qty * price;
+    const dateUsed = purchaseDate ? new Date(purchaseDate) : new Date();
 
-    // ✅ Fetch old purchase to adjust stock difference
-    const oldPurchase = await prisma.purchase.findUnique({
-      where: { id },
-      include: { item: true },
+    // STOCK ADJUSTMENT
+    // 1. Remove old quantity from old item
+    await prisma.item.update({
+      where: { id: oldPurchase.itemId },
+      data: {
+        stock: { decrement: oldPurchase.quantity },
+      },
     });
 
-    if (!oldPurchase) {
-      return res.status(404).json({ error: "Purchase not found" });
-    }
+    // 2. Add new quantity to (possibly new) item
+    await prisma.item.update({
+      where: { id: resolvedItemId },
+      data: {
+        stock: { increment: qty },
+      },
+    });
 
-    // ✅ Update the purchase record
+    // FINAL UPDATE
     const updated = await prisma.purchase.update({
       where: { id },
       data: {
@@ -280,32 +304,34 @@ export const updatePurchase = async (req, res) => {
         supplierContact,
         quantity: qty,
         unitPrice: price,
-        totalAmount: qty * price,
-        purchaseDate: when,
+        totalAmount,
+        purchaseDate: dateUsed,
         image,
         paymentType,
         borrowAmount: paymentType === "borrow" ? borrowAmount : null,
       },
-      include: { item: true },
+      include: {
+        item: true,
+        user: true,
+      },
     });
 
-    // ✅ Adjust stock (subtract old qty, add new qty)
-    const stockDiff = qty - oldPurchase.quantity;
-    await prisma.item.update({
-      where: { id: resolvedItemId },
-      data: { stock: { increment: stockDiff } },
+    return res.json({
+      message: "Purchase updated successfully",
+      updated,
     });
 
-    res.json(updated);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+  } catch (error) {
+    console.error("❌ Error updating purchase:", error);
+    return res.status(400).json({ error: error.message });
   }
 };
 
+
 export const payBorrowAmount = async (req, res) => {
   try {
-    const { id } = req.params; // purchase id
-    const { amount } = req.body; // amount being paid from borrow
+    const { id } = req.params;
+    const { amount } = req.body; 
 
     // Find the purchase
     const purchase = await prisma.purchase.findUnique({

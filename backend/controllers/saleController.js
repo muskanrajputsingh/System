@@ -52,91 +52,9 @@ export const createSale = async (req, res) => {
   }
 }
 
-// export const getSales = async (req, res) => {
-//   try {
-//     const { shopId, page = 1, limit = 50 } = req.query;
-//     const user = await prisma.user.findUnique({ where: { id: req.userId } });
-
-//     let where = {};
-
-//     //  Role-based filtering
-//     if (user.role === "admin") {
-//       if (shopId && shopId !== "all") {
-//         const users = await prisma.user.findMany({
-//           where: { shopId, role: "worker" },
-//           select: { id: true },
-//         });
-//         const userIds = users.map((u) => u.id);
-//         if (userIds.length > 0) where.userId = { in: userIds };
-//         else return res.json({ data: [], totalCount: 0 });
-//       }
-//     } else {
-//       where.userId = req.userId;
-//     }
-
-//     // Auto filter for TODAY (India time)
-//     const now = new Date();
-//     const todayIST = new Date(
-//       now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-//     );
-//     const startOfDayIST = new Date(todayIST);
-//     startOfDayIST.setHours(0, 0, 0, 0);
-//     const endOfDayIST = new Date(todayIST);
-//     endOfDayIST.setHours(23, 59, 59, 999);
-
-//     // Convert IST time range to UTC for DB filter
-//     const startUTC = new Date(
-//       startOfDayIST.getTime() - 5.5 * 60 * 60 * 1000
-//     );
-//     const endUTC = new Date(
-//       endOfDayIST.getTime() - 5.5 * 60 * 60 * 1000
-//     );
-
-//     where.saleDate = { gte: startUTC, lte: endUTC };
-
-//     const skip = (Number(page) - 1) * Number(limit);
-
-//     const [sales, totalCount] = await Promise.all([
-//       prisma.sale.findMany({
-//         where,
-//         select: {
-//           id: true,
-//           saleDate: true,
-//           quantity: true,
-//           unitPrice: true,
-//           totalAmount: true,
-//           paymentType: true,
-//           borrowAmount: true,
-//           customerName: true,
-//           item: { select: { name: true } },
-//           user: { select: { name: true } },
-//         },
-//         skip,
-//         take: Number(limit),
-//         orderBy: { saleDate: "desc" },
-//       }),
-//       prisma.sale.count({ where }),
-//     ]);
-
-//     // Convert sale date to IST for frontend
-//     const formattedSales = sales.map((s) => ({
-//       ...s,
-//       saleDateIST: new Date(s.saleDate).toLocaleString("en-IN", {
-//         timeZone: "Asia/Kolkata",
-//         hour12: true,
-//       }),
-//     }));
-
-//     res.json({ data: formattedSales, totalCount });
-//   } catch (error) {
-//     console.error("❌ Error in getSales:", error);
-//     res.status(400).json({ error: error.message });
-//   }
-// };
-
 export const getSales = async (req, res) => {
   try {
-    const { startDate, endDate, shopId, page = 1, limit = 50 } = req.query;
+    const { startDate, endDate, shopId, page = 1, limit = 100 } = req.query;
     const user = await prisma.user.findUnique({ where: { id: req.userId } });
 
     let where = {};
@@ -156,7 +74,7 @@ export const getSales = async (req, res) => {
       where.userId = req.userId;
     }
 
-    // 🕒 Date filter logic
+    //  Date filter logic
     let startUTC, endUTC;
 
     if (startDate && endDate) {
@@ -248,7 +166,7 @@ export const updateSale = async (req, res) => {
     const price = Number.parseFloat(unitPrice)
     const when = saleDate ? new Date(saleDate) : new Date()
 
-    // ✅ Adjust stock (add back old qty, subtract new qty)
+    // Adjust stock (add back old qty, subtract new qty)
     const stockDiff = sale.quantity - qty
     await prisma.item.update({
       where: { id: itemId || sale.itemId },
@@ -328,13 +246,13 @@ export const deleteSale = async (req, res) => {
 
     const { itemId, quantity } = sale;
 
-    // 1️⃣ Add sold quantity back to stock
+    // 1️ Add sold quantity back to stock
     await prisma.item.update({
       where: { id: itemId },
       data: { stock: { increment: quantity } },
     });
 
-    // 2️⃣ Delete sale
+    // 2️Delete sale
     await prisma.sale.delete({ where: { id } });
 
     res.json({ message: "Sale deleted successfully" });

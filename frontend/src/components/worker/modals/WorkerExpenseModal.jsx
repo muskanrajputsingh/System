@@ -16,15 +16,16 @@ export default function WorkerExpenseModal({ onClose, onSuccess }) {
 
   // Fetch current fund balance
 
-    const fetchFund = async () => {
-      try {
-        const {data} = await api.get("/funds") 
-        setRemainingFund(data.remainingAmount || 0)
-      } catch (err) {
-        console.error("Error fetching balance:", err)
-        setRemainingFund(0)
-      }
-    }
+   const fetchFund = async () => {
+  try {
+    const { data } = await api.get("/funds")
+    setRemainingFund(data.currentRemaining || 0)
+  } catch (err) {
+    console.error("Error fetching balance:", err)
+    setRemainingFund(0)
+  }
+}
+
  
   const handleChange = (e) => {
     const { name, value } = e.target

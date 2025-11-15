@@ -1,106 +1,6 @@
 import { prisma } from "../index.js"
 import ExcelJS from "exceljs"
 
-// export const getProfitLossSummary = async (req, res) => {
-//   try {
-//     const userId = req.userId
-//     const { startDate, endDate } = req.query
-
-//     const user = await prisma.user.findUnique({ where: { id: userId } })
-//     if (user.role !== "admin") {
-//       return res.status(403).json({ error: "Unauthorized" })
-//     }
-
-//     const start = new Date(startDate)
-//     const end = new Date(endDate)
-//     end.setHours(23, 59, 59, 999)
-
-//     const [sales, purchases, expenses, workerExpenses, saleBorrows, purchaseBorrows, funds] = await Promise.all([
-//       prisma.sale.findMany({
-//         where: { saleDate: { gte: start, lte: end } },
-//         include: { item: true, user: true },
-//       }),
-//       prisma.purchase.findMany({
-//         where: { purchaseDate: { gte: start, lte: end } },
-//         include: { item: true, user: true },
-//       }),
-//       prisma.expense.findMany({
-//         where: { date: { gte: start, lte: end } },
-//       }),
-//       prisma.workerExpense.findMany({
-//         where: { date: { gte: start, lte: end } },
-//         include: { worker: true },
-//       }),
-//       prisma.sale.findMany({
-//         where: { saleDate: { gte: start, lte: end }, paymentType: "borrow" },
-//       }),
-//       prisma.purchase.findMany({
-//         where: { purchaseDate: { gte: start, lte: end }, paymentType: "borrow" },
-//       }),
-//       prisma.workerFund.findMany({
-//         where: { createdAt: { gte: start, lte: end } },
-//         include: { owner: true },
-//         orderBy: { createdAt: "desc" },
-//       }),
-//     ])
-
-//     // Totals
-//     const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0)
-//     const totalPurchases = purchases.reduce((sum, p) => sum + p.totalAmount, 0)
-//     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0)
-//     const totalWorkerExpenses = workerExpenses.reduce((sum, e) => sum + e.amount, 0)
-//     const grossProfit = totalSales - totalPurchases
-//     const netProfit = grossProfit - (totalExpenses + totalWorkerExpenses)
-
-//     const borrowSalesTotal = saleBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0)
-//     const borrowPurchasesTotal = purchaseBorrows.reduce((sum, b) => sum + (b.borrowAmount || 0), 0)
-//     const totalFundsGiven = funds.reduce((sum, f) => sum + f.givenAmount, 0)
-
-//     res.json({
-//       totalSales,
-//       totalPurchases,
-//       totalExpenses: totalExpenses + totalWorkerExpenses,
-//       grossProfit,
-//       netProfit,
-//       salesCount: sales.length,
-//       purchaseCount: purchases.length,
-//       expenseCount: expenses.length + workerExpenses.length,
-//       borrowDetails: {
-//         sales: { totalBorrow: borrowSalesTotal, count: saleBorrows.length },
-//         purchases: { totalBorrow: borrowPurchasesTotal, count: purchaseBorrows.length },
-//       },
-//      fundDetails: {
-//   totalFundsGiven,
-//   count: funds.length,
-//   transactions: funds.map((f) => ({
-//     id: f.id,
-//     shopId: f.shopId || "-",   
-//     givenBy: f.givenBy,
-//     ownerName: f.owner?.name || "Unknown",
-//     givenAmount: f.givenAmount,
-//     remainingAmount: f.remainingAmount,
-//     date: f.createdAt,
-//   })),
-// },
-
-//       workerExpenseDetails: {
-//         totalWorkerExpenses,
-//         count: workerExpenses.length,
-//         transactions: workerExpenses.map((e) => ({
-//           id: e.id,
-//           workerName: e.worker?.name || "Unknown",
-//           title: e.title,
-//           amount: e.amount,
-//           date: e.date,
-//         })),
-//       },
-//     })
-//   } catch (error) {
-//     res.status(500).json({ error: error.message })
-//   }
-// }
-
-// Get daily report
 
 export const getProfitLossSummary = async (req, res) => {
   try {
@@ -209,7 +109,6 @@ export const getProfitLossSummary = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 export const getDailyReport = async (req, res) => {
   try {
